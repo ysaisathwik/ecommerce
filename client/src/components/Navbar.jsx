@@ -18,19 +18,30 @@ function Navbar() {
       <Link to="/" className="navbar-brand">MyStore</Link>
 
       <div className="ms-auto d-flex gap-3 align-items-center">
+
         <Link to="/" className="btn btn-outline-light">
           Home
         </Link>
+
         <Link to="/products" className="btn btn-outline-light">
           Products
         </Link>
 
+        {/* ✅ Show only when logged in */}
         {isSignedIn && (
-          <Link to="/cart" className="btn btn-outline-light">
-            Cart ({totalItems})
-          </Link>
+          <>
+            <Link to="/cart" className="btn btn-outline-light">
+              Cart ({totalItems})
+            </Link>
+
+            {/* 🔥 NEW: Orders Button */}
+            <Link to="/orders" className="btn btn-outline-info">
+              My Orders
+            </Link>
+          </>
         )}
 
+        {/* Auth Buttons */}
         {isSignedIn ? (
           <UserButton afterSignOutUrl="/" />
         ) : (
@@ -44,6 +55,7 @@ function Navbar() {
             </SignUpButton>
           </>
         )}
+
       </div>
     </nav>
   );

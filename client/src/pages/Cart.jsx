@@ -2,8 +2,8 @@ import { useContext } from "react";
 import { CartContext } from "../context/CartContext";
 import { FaTrash, FaPlus, FaMinus } from "react-icons/fa";
 import { Link } from "react-router-dom";
-function Cart() {
 
+function Cart() {
   const {
     cart,
     increaseQuantity,
@@ -18,15 +18,19 @@ function Cart() {
       <h2 className="mb-4">Your Cart</h2>
 
       {cart.length === 0 ? (
-        <p>No items in cart</p>
+        <div className="text-center">
+          <p>No items in cart</p>
+          <Link to="/products" className="btn btn-primary mt-2">
+            Browse Products
+          </Link>
+        </div>
       ) : (
         <>
 
           {cart.map((item) => (
-
             <div
               key={item.id}
-              className="card mb-3 p-3 d-flex flex-row align-items-center"
+              className="card mb-3 p-3 d-flex flex-row align-items-center shadow-sm"
             >
 
               {/* Product Info */}
@@ -40,7 +44,6 @@ function Cart() {
                 style={{ width: "25%" }}
                 className="d-flex justify-content-center align-items-center gap-3"
               >
-
                 <FaMinus
                   style={{ cursor: "pointer" }}
                   onClick={() => decreaseQuantity(item.id)}
@@ -54,7 +57,6 @@ function Cart() {
                   style={{ cursor: "pointer" }}
                   onClick={() => increaseQuantity(item.id)}
                 />
-
               </div>
 
               {/* Delete Icon */}
@@ -62,7 +64,6 @@ function Cart() {
                 style={{ width: "15%" }}
                 className="d-flex justify-content-end"
               >
-
                 <FaTrash
                   style={{
                     cursor: "pointer",
@@ -71,29 +72,27 @@ function Cart() {
                   }}
                   onClick={() => removeFromCart(item.id)}
                 />
-
               </div>
 
             </div>
-
           ))}
 
           {/* Total Price */}
           <div className="text-end mt-4">
-
             <h4>
               Total Price: ${totalPrice.toFixed(2)}
             </h4>
-
           </div>
-<div className="text-end mt-3">
-  <Link to="/checkout" className="btn btn-success">
-    Proceed to Checkout
-  </Link>
-</div>
+
+          {/* Checkout Button */}
+          <div className="text-end mt-3">
+            <Link to="/checkout" className="btn btn-success">
+              Proceed to Checkout
+            </Link>
+          </div>
+
         </>
       )}
-
     </div>
   );
 }
