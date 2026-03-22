@@ -9,8 +9,12 @@ import { useContext } from "react";
 import { CartContext } from "../context/CartContext";
 
 function Navbar() {
-  const { isSignedIn } = useUser();
+  const { isSignedIn, user, isLoaded } = useUser();
   const { totalItems } = useContext(CartContext);
+
+  if (!isLoaded) return null;
+
+  const role = user?.unsafeMetadata?.role;
 
   return (
     <nav className="navbar navbar-dark bg-dark px-4">
@@ -19,32 +23,49 @@ function Navbar() {
 
       <div className="ms-auto d-flex gap-3 align-items-center">
 
+        {/* HOME always */}
         <Link to="/" className="btn btn-outline-light">
           Home
         </Link>
 
-        <Link to="/products" className="btn btn-outline-light">
-          Products
-        </Link>
-
-        {/* ✅ Show only when logged in */}
-        {isSignedIn && (
+        {/* 👤 USER NAV */}
+        {isSignedIn && role === "user" && (
           <>
+            <Link to="/products" className="btn btn-outline-light">
+              Products
+            </Link>
+
             <Link to="/cart" className="btn btn-outline-light">
               Cart ({totalItems})
             </Link>
 
-            {/* 🔥 NEW: Orders Button */}
+            {/* Wishlist icon only for users */}
+            <Link to="/wishlist" className="btn btn-outline-light d-flex align-items-center">
+              
+              Wishlist
+            </Link>
+
             <Link to="/orders" className="btn btn-outline-info">
               My Orders
             </Link>
           </>
         )}
 
-        {/* Auth Buttons */}
-        {isSignedIn ? (
-          <UserButton afterSignOutUrl="/" />
-        ) : (
+        {/* 👑 ADMIN NAV */}
+        {isSignedIn && role === "admin" && (
+          <>
+            <Link to="/admin" className="btn btn-warning">
+              Dashboard
+            </Link>
+
+            <Link to="/admin/create" className="btn btn-success">
+              Add Product
+            </Link>
+          </>
+        )}
+
+        {/* 🔓 NOT LOGGED IN */}
+        {!isSignedIn && (
           <>
             <SignInButton>
               <button className="btn btn-outline-light">Login</button>
@@ -55,6 +76,9 @@ function Navbar() {
             </SignUpButton>
           </>
         )}
+
+        {/* 👤 USER PROFILE */}
+        {isSignedIn && <UserButton afterSignOutUrl="/" />}
 
       </div>
     </nav>

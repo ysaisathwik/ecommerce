@@ -1,5 +1,5 @@
 const Product = require("../models/Product");
-
+const Review = require("../models/Review");
 /* =========================
    GET ALL PRODUCTS
 ========================= */
@@ -17,13 +17,22 @@ exports.getProducts = async (req, res) => {
 ========================= */
 exports.getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id); // ✅ FIXED
+    const product = await Product.findById(req.params.id);
 
     if (product) {
-      res.json(product);
+      const reviews = await Review.find({
+        productId: req.params.id,
+      });
+
+      res.json({
+        product,
+        reviews,
+      });
+
     } else {
-      res.status(404).json({ message: "Product Not Found" }); // ✅ FIXED
+      res.status(404).json({ message: "Product Not Found" });
     }
+
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
   }
@@ -96,5 +105,36 @@ exports.deleteProduct = async (req, res) => {
 
   } catch (error) {
     res.status(500).json({ message: "Error deleting product" });
+  }
+};
+exports.fixRatings = async (req, res) => {
+  try {
+    const Product = require("../models/Product");
+    const Review = require("../models/Review");
+
+    const products = await Product.find();
+
+    for (let product of products) {
+      const reviews = await Review.find({ productId: product._id });
+
+      if (reviews.length === 0) {
+        product.rating = 0;
+        product.numReviews = 0;
+      } else {
+        const avg =
+          reviews.reduce((acc, r) => acc + r.rating, 0) /
+          reviews.length;
+
+        product.rating = avg.toFixed(1);
+        product.numReviews = reviews.length;
+      }
+
+      await product.save();
+    }
+
+    res.json({ message: "Ratings fixed successfully" });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };

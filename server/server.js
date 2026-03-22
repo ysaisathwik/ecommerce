@@ -4,7 +4,8 @@ const dotenv = require("dotenv");
 const productRoutes = require("./routes/productRoutes");
 const connectDB = require("./config/db");
 const orderRoutes = require("./routes/orderRoutes");
-
+const reviewRoutes = require("./routes/reviewRoutes");
+const wishlistRoutes = require("./routes/wishlistRoutes");
 dotenv.config();
 const app = express();
 
@@ -15,6 +16,8 @@ app.use(cors());
 
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/wishlist", wishlistRoutes);
 
 app.get("/", (req, res) => {
   res.send("Ecommerce API running");

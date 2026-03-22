@@ -1,35 +1,65 @@
 const Order = require("../models/Order");
 
-/* CREATE ORDER */
+// ✅ CREATE ORDER
 const createOrder = async (req, res) => {
   try {
-    const { userId, items, totalAmount } = req.body;
+    const { userId, items, totalAmount, address, paymentMethod } = req.body;
 
-    const order = new Order({
+    // 🔴 VALIDATION (IMPORTANT)
+    if (!userId || !items || items.length === 0 || !totalAmount || !address) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    // ✅ CREATE ORDER OBJECT
+    const newOrder = new Order({
       userId,
       items,
       totalAmount,
+      address,
+      paymentMethod: paymentMethod || "COD",
+      status: "Placed",
     });
 
-    const savedOrder = await order.save();
-    res.json(savedOrder);
+    // ✅ SAVE TO DB
+    await newOrder.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Order placed successfully",
+      order: newOrder,
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Failed to create order" });
+    console.error("Order Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while placing order",
+    });
   }
 };
 
-/* GET USER ORDERS */
+// ✅ GET USER ORDERS
 const getUserOrders = async (req, res) => {
   try {
-    const orders = await Order.find({
-      userId: req.params.userId,
-    }).sort({ createdAt: -1 });
+    const { userId } = req.params;
 
-    res.json(orders);
+    // 🔴 VALIDATION
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    // ✅ FETCH ORDERS
+    const orders = await Order.find({ userId }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      orders,
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Failed to fetch orders" });
+    console.error("Fetch Orders Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching orders",
+    });
   }
 };
 

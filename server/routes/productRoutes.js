@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-
+const { fixRatings } = require("../controllers/productController");
 const {
   getProducts,
   getProductById,
@@ -10,9 +10,9 @@ const {
 } = require("../controllers/productController");
 
 router.get("/", getProducts);
+router.get("/fix-ratings", fixRatings);
 router.get("/:id", getProductById);
 router.post("/", createProduct);
 router.put("/:id", updateProduct);
 router.delete("/:id", deleteProduct);
-
 module.exports = router;

@@ -4,16 +4,17 @@ import { useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
 
 function Checkout() {
-  // ✅ FIXED HERE
   const { cart, totalPrice, clearCart } = useContext(CartContext);
   const navigate = useNavigate();
-
   const { user, isLoaded } = useUser();
 
+  // ✅ UPDATED FORM (matches backend schema)
   const [form, setForm] = useState({
     name: "",
-    address: "",
-    phone: ""
+    phone: "",
+    addressLine: "",
+    city: "",
+    pincode: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -28,7 +29,14 @@ function Checkout() {
       return;
     }
 
-    if (!form.name || !form.address || !form.phone) {
+    // ✅ VALIDATION UPDATED
+    if (
+      !form.name ||
+      !form.phone ||
+      !form.addressLine ||
+      !form.city ||
+      !form.pincode
+    ) {
       alert("Please fill all fields");
       return;
     }
@@ -41,34 +49,42 @@ function Checkout() {
     try {
       setLoading(true);
 
+      // ✅ FIX: map cart to backend format
+      const formattedItems = cart.map((item) => ({
+        productId: item._id || item.id,
+        title: item.title,
+        price: item.price,
+        quantity: item.quantity,
+        image: item.image,
+      }));
+
       const response = await fetch("http://localhost:5000/api/orders", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           userId: user?.id || "guest123",
-          userName: user?.fullName || form.name,
-          email:
-            user?.primaryEmailAddress?.emailAddress || "guest@email.com",
-          items: cart,
+          items: formattedItems,
           totalAmount: totalPrice,
-          shippingDetails: form
-        })
+          address: form, // ✅ matches backend
+          paymentMethod: "COD",
+        }),
       });
 
       const data = await response.json();
       console.log("Order saved:", data);
 
-      // ✅ FIXED HERE
-      clearCart();
+      if (!response.ok) {
+        throw new Error(data.message || "Order failed");
+      }
 
-      // redirect
+      clearCart();
       navigate("/success");
 
     } catch (error) {
       console.error("Order failed:", error);
-      alert("Something went wrong");
+      alert(error.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -80,12 +96,10 @@ function Checkout() {
 
   return (
     <div className="container mt-4">
-
       <h2>Checkout</h2>
 
       <div className="row">
-
-        {/* Form */}
+        {/* FORM */}
         <div className="col-md-6">
 
           <input
@@ -99,19 +113,37 @@ function Checkout() {
 
           <input
             type="text"
-            name="address"
-            placeholder="Address"
+            name="phone"
+            placeholder="Phone"
             className="form-control mb-3"
-            value={form.address}
+            value={form.phone}
             onChange={handleChange}
           />
 
           <input
             type="text"
-            name="phone"
-            placeholder="Phone"
+            name="addressLine"
+            placeholder="Address"
             className="form-control mb-3"
-            value={form.phone}
+            value={form.addressLine}
+            onChange={handleChange}
+          />
+
+          <input
+            type="text"
+            name="city"
+            placeholder="City"
+            className="form-control mb-3"
+            value={form.city}
+            onChange={handleChange}
+          />
+
+          <input
+            type="text"
+            name="pincode"
+            placeholder="Pincode"
+            className="form-control mb-3"
+            value={form.pincode}
             onChange={handleChange}
           />
 
@@ -125,30 +157,26 @@ function Checkout() {
 
         </div>
 
-        {/* Summary */}
+        {/* SUMMARY */}
         <div className="col-md-6">
-
           <h4>Order Summary</h4>
 
           {cart.length === 0 ? (
             <p>No items in cart</p>
           ) : (
             cart.map((item) => (
-              <div key={item.id} className="mb-2">
-                {item.title} x {item.quantity} = $
+              <div key={item._id || item.id} className="mb-2">
+                {item.title} x {item.quantity} = ₹
                 {(item.price * item.quantity).toFixed(2)}
               </div>
             ))
           )}
 
           <h5 className="mt-3">
-            Total: ${totalPrice.toFixed(2)}
+            Total: ₹{totalPrice.toFixed(2)}
           </h5>
-
         </div>
-
       </div>
-
     </div>
   );
 }

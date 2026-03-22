@@ -3,22 +3,19 @@ import { createContext, useState, useEffect } from "react";
 export const CartContext = createContext();
 
 export function CartProvider({ children }) {
-  const [cart, setCart] = useState([]);
 
   /* =========================
-     LOAD CART FROM LOCALSTORAGE
+     INITIAL LOAD
   ========================= */
-  useEffect(() => {
+  const [cart, setCart] = useState(() => {
     try {
-      const savedCart = JSON.parse(localStorage.getItem("cart"));
-      if (savedCart && Array.isArray(savedCart)) {
-        setCart(savedCart);
-      }
+      const saved = localStorage.getItem("cart");
+      return saved ? JSON.parse(saved) : [];
     } catch (err) {
       console.error("Error loading cart:", err);
-      setCart([]); // ✅ fallback safety
+      return [];
     }
-  }, []);
+  });
 
   /* =========================
      SAVE CART TO LOCALSTORAGE
@@ -28,24 +25,66 @@ export function CartProvider({ children }) {
   }, [cart]);
 
   /* =========================
+     🔥 SYNC CART WITH BACKEND (FIXED)
+  ========================= */
+  useEffect(() => {
+    const syncCart = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/products");
+        const products = await res.json();
+
+        const updatedCart = cart
+          .map(item => {
+            const latest = products.find(p => p._id === item.id);
+
+            if (!latest) return null; // 🗑 removed product
+
+            return {
+              ...item,
+              price: latest.price,        // 🔥 update price
+              title: latest.title,
+              image: latest.image,
+            };
+          })
+          .filter(Boolean);
+
+        // 🔥 Only update if something actually changed
+        const isChanged =
+          JSON.stringify(updatedCart) !== JSON.stringify(cart);
+
+        if (isChanged) {
+          setCart(updatedCart);
+        }
+
+      } catch (err) {
+        console.error("Cart sync error:", err);
+      }
+    };
+
+    if (cart.length > 0) {
+      syncCart();
+    }
+  }, []); // ✅ ONLY ON LOAD (NO LOOP)
+
+  /* =========================
      ADD TO CART
   ========================= */
   const addToCart = (product) => {
-    if (!product?.id) return; // ✅ safety check
+    if (!product?.id) return;
 
-    const existing = cart.find(item => item.id === product.id);
+    setCart((prev) => {
+      const existing = prev.find(item => item.id === product.id);
 
-    if (existing) {
-      setCart(prev =>
-        prev.map(item =>
+      if (existing) {
+        return prev.map(item =>
           item.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
             : item
-        )
-      );
-    } else {
-      setCart(prev => [...prev, { ...product, quantity: 1 }]);
-    }
+        );
+      }
+
+      return [...prev, { ...product, quantity: 1 }];
+    });
   };
 
   /* =========================
@@ -93,7 +132,7 @@ export function CartProvider({ children }) {
   };
 
   /* =========================
-     TOTALS (SAFE)
+     TOTALS
   ========================= */
   const totalPrice = cart.reduce(
     (acc, item) => acc + (item.price || 0) * (item.quantity || 0),

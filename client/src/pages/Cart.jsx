@@ -50,7 +50,7 @@ function Cart() {
                 />
 
                 <span className="fw-bold">
-                  {item.quantity}
+                  {item.qty || item.quantity || 1} {/* ✅ FIX */}
                 </span>
 
                 <FaPlus
@@ -80,7 +80,7 @@ function Cart() {
           {/* Total Price */}
           <div className="text-end mt-4">
             <h4>
-              Total Price: ${totalPrice.toFixed(2)}
+              Total Price: ${Number(totalPrice || 0).toFixed(2)}
             </h4>
           </div>
 

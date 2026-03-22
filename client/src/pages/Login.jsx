@@ -1,7 +1,9 @@
+import { SignIn } from "@clerk/clerk-react";
+
 function Login() {
   return (
-    <div>
-      <h1>Login Page</h1>
+    <div className="d-flex justify-content-center mt-5">
+      <SignIn afterSignInUrl="/redirect" />
     </div>
   );
 }
