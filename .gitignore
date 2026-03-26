@@ -5,6 +5,9 @@ client/node_modules/
 
 # Env files
 .env
+backend/.env
+server/.env
+client/.env
 
 # Build / dist folders
 build/
