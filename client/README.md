@@ -1,16 +1,82 @@
-# React + Vite
+#  AI-Powered E-Commerce Platform
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A full-stack e-commerce web application with an intelligent AI chatbot for product discovery, cart management, and order handling.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+### Core E-commerce
+- Product listing with search, category, and price filters
+- Product detail view
+- Add to cart functionality
+- Quantity management (increase/decrease)
+- Remove items from cart
+- Persistent cart using localStorage
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+###  Wishlist
+- Add/remove products to wishlist
+- Save favorite items for later
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+###  Orders System
+- Place orders from cart
+- Orders stored in backend database
+- View order history
+
+---
+
+### Authentication & Roles
+- User authentication using Clerk
+- Role-based access (Admin / User)
+- Protected routes
+
+---
+
+###  Admin Dashboard
+- Add new products
+- Edit existing products
+- Delete products
+- Manage product catalog
+
+---
+
+###  AI Chatbot (Highlight Feature)
+- Conversational product search
+- Add to cart via chat
+- Intent-based system (AI + rule-based hybrid)
+- Smart filtering using:
+  - Title
+  - Category
+  - Description
+- Supports queries like:
+  - "cheap phones"
+  - "laptop under 50000"
+  - "add shoes to cart"
+
+---
+
+## Tech Stack
+
+### Frontend
+- React.js
+- Bootstrap
+- Context API (State Management)
+
+### Backend
+- Node.js
+- Express.js
+
+### Database
+- MongoDB (Mongoose)
+
+### AI Integration
+- Google Gemini API (intent-based chatbot)
+
+### Authentication
+- Clerk
+
+---

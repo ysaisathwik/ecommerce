@@ -18,14 +18,14 @@ export function CartProvider({ children }) {
   });
 
   /* =========================
-     SAVE CART TO LOCALSTORAGE
+     SAVE TO LOCALSTORAGE
   ========================= */
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(cart));
   }, [cart]);
 
   /* =========================
-     🔥 SYNC CART WITH BACKEND (FIXED)
+     🔥 SYNC CART WITH BACKEND
   ========================= */
   useEffect(() => {
     const syncCart = async () => {
@@ -33,66 +33,78 @@ export function CartProvider({ children }) {
         const res = await fetch("http://localhost:5000/api/products");
         const products = await res.json();
 
-        const updatedCart = cart
-          .map(item => {
-            const latest = products.find(p => p._id === item.id);
+        setCart((prev) => {
+          const updated = prev
+            .map((item) => {
+              const latest = products.find(
+                (p) => (p._id || p.id) === item.id
+              );
 
-            if (!latest) return null; // 🗑 removed product
+              if (!latest) return null;
 
-            return {
-              ...item,
-              price: latest.price,        // 🔥 update price
-              title: latest.title,
-              image: latest.image,
-            };
-          })
-          .filter(Boolean);
+              return {
+                ...item,
+                price: latest.price,
+                title: latest.title,
+                image: latest.image,
+              };
+            })
+            .filter(Boolean);
 
-        // 🔥 Only update if something actually changed
-        const isChanged =
-          JSON.stringify(updatedCart) !== JSON.stringify(cart);
-
-        if (isChanged) {
-          setCart(updatedCart);
-        }
+          return updated;
+        });
 
       } catch (err) {
         console.error("Cart sync error:", err);
       }
     };
 
-    if (cart.length > 0) {
-      syncCart();
-    }
-  }, []); // ✅ ONLY ON LOAD (NO LOOP)
+    syncCart();
+  }, []);
 
   /* =========================
-     ADD TO CART
+     🔥 ADD TO CART (FIXED)
   ========================= */
   const addToCart = (product) => {
-    if (!product?.id) return;
+    if (!product) return;
+
+    const id = product.id || product._id;
+
+    if (!id) {
+      console.error("❌ Product missing ID");
+      return;
+    }
 
     setCart((prev) => {
-      const existing = prev.find(item => item.id === product.id);
+      const existing = prev.find((item) => item.id === id);
 
       if (existing) {
-        return prev.map(item =>
-          item.id === product.id
+        return prev.map((item) =>
+          item.id === id
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       }
 
-      return [...prev, { ...product, quantity: 1 }];
+      return [
+        ...prev,
+        {
+          id,
+          title: product.title,
+          price: product.price,
+          image: product.image,
+          quantity: 1,
+        },
+      ];
     });
   };
 
   /* =========================
-     INCREASE QUANTITY
+     INCREASE
   ========================= */
   const increaseQuantity = (id) => {
-    setCart(prev =>
-      prev.map(item =>
+    setCart((prev) =>
+      prev.map((item) =>
         item.id === id
           ? { ...item, quantity: item.quantity + 1 }
           : item
@@ -101,15 +113,15 @@ export function CartProvider({ children }) {
   };
 
   /* =========================
-     DECREASE QUANTITY
+     DECREASE
   ========================= */
   const decreaseQuantity = (id) => {
-    setCart(prev =>
-      prev.map(item =>
+    setCart((prev) =>
+      prev.map((item) =>
         item.id === id
           ? {
               ...item,
-              quantity: item.quantity > 1 ? item.quantity - 1 : 1
+              quantity: item.quantity > 1 ? item.quantity - 1 : 1,
             }
           : item
       )
@@ -117,14 +129,14 @@ export function CartProvider({ children }) {
   };
 
   /* =========================
-     REMOVE ITEM
+     REMOVE
   ========================= */
   const removeFromCart = (id) => {
-    setCart(prev => prev.filter(item => item.id !== id));
+    setCart((prev) => prev.filter((item) => item.id !== id));
   };
 
   /* =========================
-     CLEAR CART
+     CLEAR
   ========================= */
   const clearCart = () => {
     setCart([]);
@@ -135,12 +147,12 @@ export function CartProvider({ children }) {
      TOTALS
   ========================= */
   const totalPrice = cart.reduce(
-    (acc, item) => acc + (item.price || 0) * (item.quantity || 0),
+    (acc, item) => acc + item.price * item.quantity,
     0
   );
 
   const totalItems = cart.reduce(
-    (acc, item) => acc + (item.quantity || 0),
+    (acc, item) => acc + item.quantity,
     0
   );
 
@@ -154,7 +166,7 @@ export function CartProvider({ children }) {
         removeFromCart,
         clearCart,
         totalPrice,
-        totalItems
+        totalItems,
       }}
     >
       {children}

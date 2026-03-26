@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
+import { useEffect, useState } from "react";   // 🔥 ADD THIS
 
 import Home from "./pages/Home";
 import Products from "./pages/Products";
@@ -17,6 +18,7 @@ import AdminProductForm from "./pages/AdminProductForm";
 import RoleSelection from "./pages/RoleSelection";
 import UserRoute from "./components/UserRoute";
 import WishlistPage from "./pages/WishlistPage";
+
 /* =========================
    ROLE REDIRECT
 ========================= */
@@ -24,27 +26,24 @@ function RedirectBasedOnRole() {
   const { user, isLoaded, isSignedIn } = useUser();
 
   if (!isLoaded) return <p className="text-center mt-5">Loading...</p>;
-
   if (!isSignedIn) return <Navigate to="/login" />;
 
   const role = user?.unsafeMetadata?.role;
 
   if (!role) return <Navigate to="/select-role" />;
-
   if (role === "admin") return <Navigate to="/admin" />;
 
   return <Navigate to="/products" />;
 }
 
 /* =========================
-   ADMIN ROUTE (FIXED)
+   ADMIN ROUTE
 ========================= */
 function AdminRoute({ children }) {
   const { user, isLoaded } = useUser();
 
   if (!isLoaded) return <p className="text-center mt-5">Loading...</p>;
 
-  // 🔥 wait until metadata loads
   if (!user?.unsafeMetadata?.role) {
     return <p className="text-center mt-5">Checking role...</p>;
   }
@@ -56,38 +55,56 @@ function AdminRoute({ children }) {
   return children;
 }
 
+/* =========================
+   MAIN APP
+========================= */
 function App() {
+
+  // 🔥 GLOBAL PRODUCTS STATE
+  const [products, setProducts] = useState([]);
+
+  // 🔥 FETCH ONCE HERE
+  useEffect(() => {
+    fetch("http://localhost:5000/api/products")
+      .then(res => res.json())
+      .then(data => {
+        console.log("GLOBAL PRODUCTS:", data);
+        setProducts(data);
+      })
+      .catch(err => console.error(err));
+  }, []);
+
   return (
     <Router>
       <Navbar />
 
       <Routes>
 
-        {/* HOME */}
         <Route path="/" element={<Home />} />
-
-        {/* 🔥 CLERK REDIRECT AFTER LOGIN */}
         <Route path="/redirect" element={<RedirectBasedOnRole />} />
-
-        {/* ROLE SELECTION */}
         <Route path="/select-role" element={<RoleSelection />} />
-
-        {/* AUTH */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* USER ROUTES */}
+        {/* 🔥 PASS PRODUCTS HERE */}
         <Route
           path="/products"
           element={
             <UserRoute>
-              <Products />
+              <Products products={products} />
             </UserRoute>
           }
         />
-        <Route path="/wishlist" element={<UserRoute>
-             <WishlistPage />
-            </UserRoute>} /> 
+
+        <Route
+          path="/wishlist"
+          element={
+            <UserRoute>
+              <WishlistPage />
+            </UserRoute>
+          }
+        />
+
         <Route
           path="/cart"
           element={
@@ -126,7 +143,7 @@ function App() {
 
         <Route path="/success" element={<Success />} />
 
-        {/* ADMIN ROUTES */}
+        {/* ADMIN */}
         <Route
           path="/admin"
           element={
@@ -154,7 +171,6 @@ function App() {
           }
         />
 
-        {/* FALLBACK */}
         <Route
           path="*"
           element={<h2 className="text-center mt-5">Page Not Found</h2>}
@@ -162,7 +178,9 @@ function App() {
 
       </Routes>
 
-      <Chatbot />
+      {/* 🔥 PASS PRODUCTS TO CHATBOT */}
+      <Chatbot products={products} />
+
     </Router>
   );
 }
